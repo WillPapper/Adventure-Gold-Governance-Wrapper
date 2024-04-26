@@ -50,8 +50,9 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
         AGLD.safeTransfer(msg.sender, amount);
     }
 
-    // TODO Override the _beforeTokenTransfer function to prevent transfers.
     // Only transfers to/from this contract are allowed
+    /// @dev For Solidity lineraization, see https://medium.com/@kalexotsu/inheritance-inheritance-order-and-the-super-keyword-in-solidity-bbe49a2478b6
+    /// @dev ERC20Votes is called since Solidity inheritance is linearized from right to left
     function _update(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Votes) {
         if (from != address(this) || to != address(this)) revert OnlyTransfersToFromContract();
         super._update(from, to, value);
