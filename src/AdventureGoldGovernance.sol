@@ -42,6 +42,8 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
 
     /// @notice Deposits AGLD tokens and mints Adventure Gold Governance tokens in return.
     /// @param amount The amount of AGLD tokens to deposit.
+    /// @dev Users must approve this contract to spend their AGLD tokens prior
+    /// to depositing.
     /// @dev The AGLD tokens are transferred from the msg.sender to this contract.
     function deposit(uint256 amount) external {
         // Follows the Checks-Effects-Interactions pattern
@@ -66,11 +68,13 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
     function withdraw(uint256 amount) external {
         // Follows the Checks-Effects-Interactions pattern
         // Checks
-        // Allowance checks occur in `burnFrom` via `_spendAllowance`
+        // No allowance checks are needed since the msg.sender's tokens are
+        // burned
 
         // Effects
-        // Burn the same amount of Adventure Gold Governance tokens
-        burnFrom(msg.sender, amount);
+        // Burn the same amount of Adventure Gold Governance tokens from the
+        // sender
+        burn(amount);
 
         // Interactions
         // Transfer AGLD tokens from this contract to the sender
