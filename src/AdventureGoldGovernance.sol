@@ -15,6 +15,7 @@ contract SpitToken is ERC20Burnable, IERC6372, ERC20Permit, ERC20Votes {
     error OnlyOwner();
     error SupplyLimitReached();
     error MintPaused();
+    error OnlyTransfersToFromContract();
 
     uint256 public constant SUPPLY_CAP = 1000000000e18;
     address public immutable OWNER;
@@ -66,6 +67,10 @@ contract SpitToken is ERC20Burnable, IERC6372, ERC20Permit, ERC20Votes {
 
     // TODO Override the _beforeTokenTransfer function to prevent transfers.
     // Only transfers to/from this contract are allowed
+    function _update(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Votes) {
+        if (from != address(this) || to != address(this)) revert OnlyTransfersToFromContract();
+        super._update(from, to, value);
+    }
 
     // Overrides IERC6372 functions to make the token & governor timestamp-based
     function clock() public view override(IERC6372, Votes) returns (uint48) {
