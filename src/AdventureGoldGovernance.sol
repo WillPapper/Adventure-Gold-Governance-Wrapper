@@ -10,7 +10,8 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol"
 
 /// @title Adventure Gold Governance
 /// @author Will Papper
-/// @notice This contract allows users to deposit AGLD tokens and receive Adventure Gold Governance tokens in return.
+/// @notice This contract allows users to deposit AGLD tokens and receive
+/// Adventure Gold Governance tokens in return.
 /// Users can also burn Adventure Gold Governance tokens to withdraw AGLD tokens.
 /// @dev The contract inherits from ERC20Burnable, ERC20Permit, and ERC20Votes.
 contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20Votes {
@@ -18,6 +19,18 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
 
     /// @notice Error emitted when transfers are not to or from the contract.
     error OnlyTransfersToFromContract();
+
+    /// @notice Emitted when a user deposits AGLD tokens, minting Adventure Gold
+    /// Governance tokens.
+    /// @param user The address of the user who deposited tokens.
+    /// @param amount The amount of AGLD tokens deposited.
+    event Deposit(address indexed user, uint256 amount);
+
+    /// @notice Emitted when a user withdraws AGLD tokens, burning Adventure
+    /// Gold Governance tokens.
+    /// @param user The address of the user who withdrew tokens.
+    /// @param amount The amount of AGLD tokens withdrawn.
+    event Withdrawal(address indexed user, uint256 amount);
 
     /// @notice The address of the AGLD token contract.
     address public immutable AGLD_TOKEN_ADDRESS = 0x32353A6C91143bfd6C7d363B546e62a9A2489A20;
@@ -42,6 +55,8 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
         // Interactions
         // Transfer AGLD tokens from the sender to this contract
         AGLD_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
+
+        emit Deposit(msg.sender, amount);
     }
 
     /// @notice Burns Adventure Gold Governance tokens and withdraws AGLD tokens in return.
@@ -60,6 +75,8 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
         // Interactions
         // Transfer AGLD tokens from this contract to the sender
         AGLD_TOKEN.safeTransfer(msg.sender, amount);
+
+        emit Withdrawal(msg.sender, amount);
     }
 
     /// @notice Only transfers to/from this contract are allowed
