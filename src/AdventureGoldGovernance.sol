@@ -14,7 +14,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
     error OnlyTransfersToFromContract();
 
     address public immutable AGLD_TOKEN_ADDRESS = 0x32353A6C91143bfd6C7d363B546e62a9A2489A20;
-    IERC20 public immutable AGLD = IERC20(AGLD_TOKEN_ADDRESS);
+    IERC20 public immutable AGLD_TOKEN = IERC20(AGLD_TOKEN_ADDRESS);
 
     constructor() ERC20("Adventure Gold Governance", "AGLDGOV") ERC20Permit("Adventure Gold Governance") {}
 
@@ -31,7 +31,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
 
         // Interactions
         // Transfer AGLD tokens from the sender to this contract
-        AGLD.safeTransferFrom(msg.sender, address(this), amount);
+        AGLD_TOKEN.safeTransferFrom(msg.sender, address(this), amount);
     }
 
     // Allows anyone to burn Adventure Gold Governance tokens and receive AGLD
@@ -47,7 +47,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
 
         // Interactions
         // Transfer AGLD tokens from this contract to the sender
-        AGLD.safeTransfer(msg.sender, amount);
+        AGLD_TOKEN.safeTransfer(msg.sender, amount);
     }
 
     // Only transfers to/from this contract are allowed
