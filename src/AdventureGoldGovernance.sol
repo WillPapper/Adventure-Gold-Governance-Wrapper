@@ -1,37 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import "../lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol";
-import "../lib/openzeppelin-contracts/contracts/governance/utils/Votes.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "../lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol";
+import "../lib/openzeppelin-contracts/contracts/governance/utils/Votes.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract SpitToken is ERC20Burnable, IERC6372, ERC20Permit, ERC20Votes {
+contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20Votes {
     using SafeERC20 for IERC20;
 
-    error OnlyOwner();
-    error SupplyLimitReached();
-    error MintPaused();
     error OnlyTransfersToFromContract();
 
-    uint256 public constant SUPPLY_CAP = 1000000000e18;
-    address public immutable OWNER;
     address public immutable AGLD_TOKEN_ADDRESS = 0x32353A6C91143bfd6C7d363B546e62a9A2489A20;
     IERC20 public immutable AGLD = IERC20(AGLD_TOKEN_ADDRESS);
 
-    bool public paused;
-
-    modifier onlyOwner() {
-        if (msg.sender != OWNER) revert OnlyOwner();
-        _;
-    }
-
-    constructor() ERC20("Adventure Gold Governance", "AGLDGOV") ERC20Permit("Adventure Gold Governance") {
-        OWNER = msg.sender;
-    }
+    constructor() ERC20("Adventure Gold Governance", "AGLDGOV") ERC20Permit("Adventure Gold Governance") {}
 
     // Allows anyone to deposit AGLD tokens and receive Adventure Gold
     // Governance tokens in return
@@ -83,26 +69,7 @@ contract SpitToken is ERC20Burnable, IERC6372, ERC20Permit, ERC20Votes {
     }
 
     // The functions below are overrides required by Solidity.
-
     function nonces(address owner) public view virtual override(ERC20Permit, Nonces) returns (uint256) {
         return super.nonces(owner);
-    }
-
-    function mint(address dest, uint256 amount) external {
-        if (paused) revert MintPaused();
-        if (totalSupply() + amount > SUPPLY_CAP) revert SupplyLimitReached();
-        _update(address(0), dest, amount);
-    }
-
-    function burn(address account, uint256 amount) external onlyOwner {
-        _update(account, address(0), amount);
-    }
-
-    function _update(address from, address to, uint256 amount) internal override(ERC20, ERC20Votes) {
-        super._update(from, to, amount);
-    }
-
-    function setPause(bool _paused) external onlyOwner {
-        paused = _paused;
     }
 }
