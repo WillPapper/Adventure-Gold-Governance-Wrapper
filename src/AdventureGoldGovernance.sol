@@ -3,13 +3,13 @@ pragma solidity ^0.8.25;
 
 import "../lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol";
 import "../lib/openzeppelin-contracts/contracts/governance/utils/Votes.sol";
-import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract SpitToken is ERC20, IERC6372, ERC20Permit, ERC20Votes {
+contract SpitToken is ERC20Burnable, IERC6372, ERC20Permit, ERC20Votes {
     using SafeERC20 for IERC20;
 
     error OnlyOwner();
@@ -48,9 +48,21 @@ contract SpitToken is ERC20, IERC6372, ERC20Permit, ERC20Votes {
         AGLD.safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    // TODO: Withdraw function
     // Allows anyone to burn Adventure Gold Governance tokens and receive AGLD
     // tokens in return
+    function withdraw(uint256 amount) external {
+        // Follows the Checks-Effects-Interactions pattern
+        // Checks
+        // Allowance checks occur in `burnFrom` via `_spendAllowance`
+
+        // Effects
+        // Burn the same amount of Adventure Gold Governance tokens
+        burnFrom(msg.sender, amount);
+
+        // Interactions
+        // Transfer AGLD tokens from this contract to the sender
+        AGLD.safeTransfer(msg.sender, amount);
+    }
 
     // TODO Override the _beforeTokenTransfer function to prevent transfers.
     // Only transfers to/from this contract are allowed
