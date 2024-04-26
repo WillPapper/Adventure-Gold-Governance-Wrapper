@@ -4,16 +4,22 @@ pragma solidity ^0.8.25;
 import "../lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol";
 import "../lib/openzeppelin-contracts/contracts/governance/utils/Votes.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Votes.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract SpitToken is ERC20, IERC6372, ERC20Permit, ERC20Votes {
+    using SafeERC20 for IERC20;
+
     error OnlyOwner();
     error SupplyLimitReached();
     error MintPaused();
 
     uint256 public constant SUPPLY_CAP = 1000000000e18;
     address public immutable OWNER;
+    address public immutable AGLD_TOKEN_ADDRESS = 0x32353A6C91143bfd6C7d363B546e62a9A2489A20;
+    IERC20 public immutable AGLD = IERC20(AGLD_TOKEN_ADDRESS);
 
     bool public paused;
 
@@ -22,9 +28,32 @@ contract SpitToken is ERC20, IERC6372, ERC20Permit, ERC20Votes {
         _;
     }
 
-    constructor() ERC20("Spit", "SPIT") ERC20Permit("Spit") {
+    constructor() ERC20("Adventure Gold Governance", "AGLDGOV") ERC20Permit("Adventure Gold Governance") {
         OWNER = msg.sender;
     }
+
+    // Allows anyone to deposit AGLD tokens and receive Adventure Gold
+    // Governance tokens in return
+    function deposit(uint256 amount) external {
+        // Follows the Checks-Effects-Interactions pattern
+        // Checks
+        // Allowance and transfer checks occur in the AGLD token contract
+
+        // Effects
+        // Mint the same amount of Adventure Gold Governance tokens
+        _mint(msg.sender, amount);
+
+        // Interactions
+        // Transfer AGLD tokens from the sender to this contract
+        AGLD.safeTransferFrom(msg.sender, address(this), amount);
+    }
+
+    // TODO: Withdraw function
+    // Allows anyone to burn Adventure Gold Governance tokens and receive AGLD
+    // tokens in return
+
+    // TODO Override the _beforeTokenTransfer function to prevent transfers.
+    // Only transfers to/from this contract are allowed
 
     // Overrides IERC6372 functions to make the token & governor timestamp-based
     function clock() public view override(IERC6372, Votes) returns (uint48) {
