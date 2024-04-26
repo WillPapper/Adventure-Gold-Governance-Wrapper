@@ -5,7 +5,6 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burn
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "../lib/openzeppelin-contracts/contracts/interfaces/IERC6372.sol";
-import "../lib/openzeppelin-contracts/contracts/governance/utils/Votes.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
