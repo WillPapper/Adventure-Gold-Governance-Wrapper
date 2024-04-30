@@ -86,7 +86,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     /// @notice Only transfers to/from this contract are allowed
     /// @dev For Solidity lineraization, see https://medium.com/@kalexotsu/inheritance-inheritance-order-and-the-super-keyword-in-solidity-bbe49a2478b6
     /// @dev ERC20Votes is called since Solidity inheritance is linearized from right to left
-    function _update(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Votes) {
+    function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Votes) {
         if (from != address(this) || to != address(this)) revert OnlyTransfersToFromContract();
         super._update(from, to, value);
     }
@@ -107,6 +107,9 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     /// @param owner The address of the owner.
     /// @return Nonce value.
     // The functions below are overrides required by Solidity.
+    // Without it, you will receive the following error:
+    // `Error (6480): Derived contract must override function "nonces". Two or
+    // more base classes define function with same name and parameter types.`
     function nonces(address owner) public view virtual override(ERC20Permit, Nonces) returns (uint256) {
         return super.nonces(owner);
     }
