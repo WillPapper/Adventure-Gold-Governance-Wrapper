@@ -14,7 +14,7 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol"
 /// Adventure Gold Governance tokens in return.
 /// Users can also burn Adventure Gold Governance tokens to withdraw AGLD tokens.
 /// @dev The contract inherits from ERC20Burnable, ERC20Permit, and ERC20Votes.
-contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20Votes {
+contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     using SafeERC20 for IERC20;
 
     /// @notice Error emitted when transfers are not to or from the contract.
@@ -74,7 +74,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Burnable, ERC20Permit, ERC20V
         // Effects
         // Burn the same amount of Adventure Gold Governance tokens from the
         // sender
-        burn(amount);
+        _burn(msg.sender, amount);
 
         // Interactions
         // Transfer AGLD tokens from this contract to the sender
