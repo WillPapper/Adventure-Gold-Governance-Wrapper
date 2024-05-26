@@ -35,7 +35,7 @@ contract AdventureGoldGovernanceTest is Test {
         uint256 amount = 100 * 10 ** 18;
 
         // Deposit 100 AGLD tokens
-        vm.startPrank(0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b);
+        vm.startPrank(testingAddress);
         adventureGold.approve(address(adventureGoldGovernance), amount);
         adventureGoldGovernance.deposit(amount);
 
@@ -48,6 +48,28 @@ contract AdventureGoldGovernanceTest is Test {
         adventureGoldGovernance.withdraw(amount);
 
         // Check balances after withdrawal
+        assertEq(adventureGold.balanceOf(testingAddress), startingBalance);
+        assertEq(adventureGoldGovernance.balanceOf(testingAddress), 0);
+        assertEq(adventureGoldGovernance.totalSupply(), 0);
+
+        vm.stopPrank();
+    }
+
+    // This is a given in the AGLD contract, so it's not strictly necessary to
+    // test
+    function test_cannot_deposit_without_approval() public {
+        // Starting balance of AGLD
+        uint256 startingBalance = adventureGold.balanceOf(testingAddress);
+
+        // 100 tokens (which uses 18 decimals)
+        uint256 amount = 100 * 10 ** 18;
+
+        // Deposit 100 AGLD tokens without approval
+        vm.startPrank(testingAddress);
+        vm.expectRevert("ERC20: transfer amount exceeds allowance");
+        adventureGoldGovernance.deposit(amount);
+
+        // Check balances after deposit
         assertEq(adventureGold.balanceOf(testingAddress), startingBalance);
         assertEq(adventureGoldGovernance.balanceOf(testingAddress), 0);
         assertEq(adventureGoldGovernance.totalSupply(), 0);
