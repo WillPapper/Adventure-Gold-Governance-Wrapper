@@ -10,6 +10,19 @@ definition filterTransfers(method f) returns bool = (f.selector !=
 sig:transfer(address,uint256).selector && f.selector !=
 sig:transferFrom(address,address,uint256).selector);
 
+// Only surface transfers (to prove that they are vacuous)
+definition onlyTransfers(method f) returns bool = (f.selector ==
+sig:transfer(address,uint256).selector || f.selector ==
+sig:transferFrom(address,address,uint256).selector);
+
+rule transfersAlwaysRevert(method f) filtered { f -> onlyTransfers(f) } {
+    env e;
+    calldataarg args;
+    f@withrevert(e, args);
+
+    assert (lastReverted, "transfer did not revert");
+}
+
 /** @title Users' balance can only be changed as a result of `deposit()` or
  * `withdraw()`
  *
