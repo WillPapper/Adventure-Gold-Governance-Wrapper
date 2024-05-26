@@ -15,6 +15,7 @@ definition onlyTransfers(method f) returns bool = (f.selector ==
 sig:transfer(address,uint256).selector || f.selector ==
 sig:transferFrom(address,address,uint256).selector);
 
+/** @title Prove that transfers are vacuous because they always revert */
 rule transfersAlwaysRevert(method f) filtered { f -> onlyTransfers(f) } {
     env e;
     calldataarg args;
@@ -44,4 +45,20 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
             f.selector == sig:withdraw(uint256).selector)
         ),
         "user's balance changed as a result function other than deposit() or withdraw()";
+}
+
+/** @title Users can never withdraw more than they've deposited 
+*/
+rule canNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
+uint256 withdrawAmount) filtered { f -> filterTransfers(f) } {
+    env e;
+    calldataarg args;
+
+    deposit(e, depositAmount);
+    f(e, args);
+    withdraw@withrevert(e, withdrawAmount);
+
+    // Withdraw should revert if the user tries to withdraw more than they've
+    // deposited. Otherwise, the withdrawal should proceed.
+    assert(lastReverted || withdrawAmount <= depositAmount, "user withdrew more than deposited");
 }
