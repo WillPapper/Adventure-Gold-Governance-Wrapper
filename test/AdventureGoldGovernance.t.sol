@@ -20,7 +20,7 @@ contract AdventureGoldGovernanceTest is Test {
         adventureGold = IERC20(0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
     }
 
-    function test_AdventureGold_Address() public view {
+    function test_AdventureGold_Address() public {
         assertEq(adventureGoldGovernance.AGLD_TOKEN_ADDRESS(), 0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
     }
 
@@ -29,14 +29,27 @@ contract AdventureGoldGovernanceTest is Test {
         uint256 startingBalance = adventureGold.balanceOf(testingAddress);
         // Starting balance of Adventure Gold Governance
         assertEq(adventureGoldGovernance.balanceOf(testingAddress), 0);
+        assertEq(adventureGoldGovernance.totalSupply(), 0);
 
         // 100 tokens (which uses 18 decimals)
         uint256 amount = 100 * 10 ** 18;
 
+        // Deposit 100 AGLD tokens
         vm.startPrank(0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b);
         adventureGold.approve(address(adventureGoldGovernance), amount);
         adventureGoldGovernance.deposit(amount);
+
+        // Check balances after deposit
         assertEq(adventureGold.balanceOf(testingAddress), startingBalance - amount);
         assertEq(adventureGoldGovernance.balanceOf(testingAddress), amount);
+        assertEq(adventureGoldGovernance.totalSupply(), amount);
+
+        // Withdraw 100 AGLD tokens
+        adventureGoldGovernance.withdraw(amount);
+
+        // Check balances after withdrawal
+        assertEq(adventureGold.balanceOf(testingAddress), startingBalance);
+        assertEq(adventureGoldGovernance.balanceOf(testingAddress), 0);
+        assertEq(adventureGoldGovernance.totalSupply(), 0);
     }
 }
