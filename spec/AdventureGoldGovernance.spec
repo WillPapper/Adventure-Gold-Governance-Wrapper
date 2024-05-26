@@ -7,6 +7,11 @@
     function totalSupply() external returns uint256 envfree;
     function balanceOf(address) external returns uint256 envfree;
     function allowance(address,address) external returns uint256 envfree;
+
+    // DummyERC20Impl envfree functions
+    function DummyERC20Impl.totalSupply() external returns uint256 envfree;
+    function DummyERC20Impl.balanceOf(address) external returns uint256 envfree;
+    function DummyERC20Impl.allowance(address,address) external returns uint256 envfree;
 }
 
 // Only surface Adventure Gold Governance transfers (useful to prove that they
@@ -53,9 +58,10 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
 */
 rule userCanNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
 uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
+    uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(user);
+
     env e;
     calldataarg args;
-    uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(e, user);
     // This is separately verified in userCanNeverDepositMoreThanBalance
     require adventureGoldBalanceBefore >= depositAmount;
 
