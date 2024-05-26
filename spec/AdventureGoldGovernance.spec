@@ -16,14 +16,8 @@ definition filterTransfers(method f) returns bool = !(f.contract == currentContr
 sig:transfer(address,uint256).selector && f.selector ==
 sig:transferFrom(address,address,uint256).selector));
 
-// Only surface transfers (to prove that they are vacuous)
-definition onlyTransfers(method f) returns bool = (f.contract == currentContract &&
-(f.selector ==
-sig:transfer(address,uint256).selector || f.selector ==
-sig:transferFrom(address,address,uint256).selector));
-
 /** @title Prove that transfers are vacuous because they always revert */
-rule transfersAlwaysRevert(method f) filtered { f -> onlyTransfers(f) } {
+rule transfersAlwaysRevert(method f) filtered { f -> !filterTransfers(f) } {
     env e;
     calldataarg args;
     f@withrevert(e, args);
