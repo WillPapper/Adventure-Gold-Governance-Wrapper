@@ -1,3 +1,7 @@
+ import "./helpers/erc20.spec";
+
+ using DummyERC20Impl as adventureGold;
+
  methods {
     // envfree functions 
     function totalSupply() external returns uint256 envfree;
@@ -6,14 +10,17 @@
 }
 
 // Filter transfers because we have already confirmed that they are vacuous
-definition filterTransfers(method f) returns bool = (f.selector !=
-sig:transfer(address,uint256).selector && f.selector !=
-sig:transferFrom(address,address,uint256).selector);
+// Negate this filter to only surface transfers
+definition filterTransfers(method f) returns bool = !(f.contract == currentContract &&
+(f.selector ==
+sig:transfer(address,uint256).selector && f.selector ==
+sig:transferFrom(address,address,uint256).selector));
 
 // Only surface transfers (to prove that they are vacuous)
-definition onlyTransfers(method f) returns bool = (f.selector ==
+definition onlyTransfers(method f) returns bool = (f.contract == currentContract &&
+(f.selector ==
 sig:transfer(address,uint256).selector || f.selector ==
-sig:transferFrom(address,address,uint256).selector);
+sig:transferFrom(address,address,uint256).selector));
 
 /** @title Prove that transfers are vacuous because they always revert */
 rule transfersAlwaysRevert(method f) filtered { f -> onlyTransfers(f) } {
@@ -49,10 +56,13 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
 
 /** @title Users can never withdraw more than they've deposited 
 */
-rule canNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
+rule userCanNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
 uint256 withdrawAmount) filtered { f -> filterTransfers(f) } {
     env e;
     calldataarg args;
+    uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(e, user);
+    // This is separately verified in userCanNeverDepositMoreThanBalance
+    require adventureGoldBalanceBefore >= depositAmount;
 
     deposit(e, depositAmount);
     f(e, args);
