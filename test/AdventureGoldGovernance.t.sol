@@ -20,11 +20,11 @@ contract AdventureGoldGovernanceTest is Test {
         adventureGold = IERC20(0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
     }
 
-    function test_AdventureGold_Address() public {
+    function test_AdventureGoldAddress() public {
         assertEq(adventureGoldGovernance.AGLD_TOKEN_ADDRESS(), 0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
     }
 
-    function test_deposit_and_withdraw() public {
+    function test_DepositAndWithdraw() public {
         // Starting balance of AGLD
         uint256 startingBalance = adventureGold.balanceOf(testingAddress);
         // Starting balance of Adventure Gold Governance
@@ -57,7 +57,7 @@ contract AdventureGoldGovernanceTest is Test {
 
     // This is a given in the AGLD contract, so it's not strictly necessary to
     // test
-    function test_cannot_deposit_without_approval() public {
+    function test_CannotDepositWithoutApprovals() public {
         // Starting balance of AGLD
         uint256 startingBalance = adventureGold.balanceOf(testingAddress);
 
