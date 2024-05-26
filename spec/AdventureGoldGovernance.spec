@@ -5,6 +5,11 @@
     function allowance(address,address) external returns uint256 envfree;
 }
 
+// Filter transfers because we have already confirmed that they are vacuous
+definition filterTransfers(method f) returns bool = (f.selector !=
+sig:transfer(address,uint256).selector && f.selector !=
+sig:transferFrom(address,address,uint256).selector);
+
 /** @title Users' balance can only be changed as a result of `deposit()` or
  * `withdraw()`
  *
@@ -12,7 +17,7 @@
  * Since f is a parametric method that can be any function in the contract, we use
  * `f.selector` to specify the functions that may change the balance.
  */
-rule balanceChangesFromCertainFunctions(method f, address user){
+rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> filterTransfers(f) } {
     env e;
     calldataarg args;
     uint256 userBalanceBefore = balanceOf(user);
