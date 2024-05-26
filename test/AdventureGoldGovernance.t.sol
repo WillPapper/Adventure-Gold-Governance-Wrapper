@@ -20,7 +20,7 @@ contract AdventureGoldGovernanceTest is Test {
         adventureGold = IERC20(0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
     }
 
-    function test_AdventureGold_Address() public {
+    function test_AdventureGold_Address() public view {
         assertEq(adventureGoldGovernance.AGLD_TOKEN_ADDRESS(), 0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
     }
 
