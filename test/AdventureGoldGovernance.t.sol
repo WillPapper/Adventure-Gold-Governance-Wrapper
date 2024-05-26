@@ -18,6 +18,14 @@ contract AdventureGoldGovernanceTest is Test {
     /// @notice Error emitted when the transfer function is called
     error NonTransferable();
 
+    /**
+     * @dev Indicates an error related to the current `balance` of a `sender`. Used in transfers.
+     * @param sender Address whose tokens are being transferred.
+     * @param balance Current balance for the interacting account.
+     * @param needed Minimum amount required to perform a transfer.
+     */
+    error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);
+
     function setUp() public {
         mainnetFork = vm.createFork(vm.envString("ETHEREUM_MAINNET_RPC_URL"));
         vm.selectFork(mainnetFork);
@@ -121,6 +129,35 @@ contract AdventureGoldGovernanceTest is Test {
         adventureGoldGovernance.deposit(amountMoreThanBalance);
 
         // Check balances after failed deposit
+        assertEq(adventureGold.balanceOf(testingAddress2), startingBalance - amount);
+        assertEq(adventureGoldGovernance.balanceOf(testingAddress2), amount);
+        assertEq(adventureGoldGovernance.totalSupply(), amount);
+
+        vm.stopPrank();
+    }
+
+    function test_CannotWithdrawMoreThanBalance() public {
+        // Starting balance of AGLD
+        uint256 startingBalance = adventureGold.balanceOf(testingAddress2);
+
+        // 100 tokens (which uses 18 decimals)
+        uint256 amount = 100 * 10 ** 18;
+
+        // Deposit 100 AGLD tokens
+        vm.startPrank(testingAddress2);
+        adventureGold.approve(address(adventureGoldGovernance), amount);
+        adventureGoldGovernance.deposit(amount);
+
+        // Check balances after deposit
+        assertEq(adventureGold.balanceOf(testingAddress2), startingBalance - amount);
+        assertEq(adventureGoldGovernance.balanceOf(testingAddress2), amount);
+        assertEq(adventureGoldGovernance.totalSupply(), amount);
+
+        // Try to withdraw an amount greater than the balance
+        vm.expectRevert(abi.encodeWithSelector(ERC20InsufficientBalance.selector, testingAddress2, amount, amount + 1));
+        adventureGoldGovernance.withdraw(amount + 1);
+
+        // Check balances after failed withdrawal
         assertEq(adventureGold.balanceOf(testingAddress2), startingBalance - amount);
         assertEq(adventureGoldGovernance.balanceOf(testingAddress2), amount);
         assertEq(adventureGoldGovernance.totalSupply(), amount);
