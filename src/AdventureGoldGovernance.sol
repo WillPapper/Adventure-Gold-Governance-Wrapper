@@ -17,8 +17,12 @@ import "../lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol"
 contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     using SafeERC20 for IERC20;
 
-    /// @notice Error emitted when transfers are not to or from the contract.
-    error OnlyTransfersToFromContract();
+    /// @notice Error emitted when transfers are not to or from the contract or
+    /// the burn address
+    error OnlyMintsAndBurnsAllowed();
+
+    /// @notice Error emitted when the transfer function is called
+    error NonTransferable();
 
     /// @notice Emitted when a user deposits AGLD tokens, minting Adventure Gold
     /// Governance tokens.
@@ -83,7 +87,14 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
         emit Withdrawal(msg.sender, amount);
     }
 
-    /// @notice Only transfers to/from this contract are allowed
+    function transfer(address to, uint256 value) public override(ERC20) returns (bool) {
+        revert NonTransferable();
+    }
+
+    function transferFrom(address from, address to, uint256 value) public override(ERC20) returns (bool) {
+        revert NonTransferable();
+    }
+
     /// @dev For Solidity lineraization, see https://medium.com/@kalexotsu/inheritance-inheritance-order-and-the-super-keyword-in-solidity-bbe49a2478b6
     /// @dev ERC20Votes is called since Solidity inheritance is linearized from right to left
     function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Votes) {
@@ -92,7 +103,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
         // Or:
         // - The `to` address is not the zero address or this contract
         if (!((from == address(this) || from == address(0)) || (to == address(this) || to == address(0)))) {
-            revert OnlyTransfersToFromContract();
+            revert OnlyMintsAndBurnsAllowed();
         }
         super._update(from, to, value);
     }

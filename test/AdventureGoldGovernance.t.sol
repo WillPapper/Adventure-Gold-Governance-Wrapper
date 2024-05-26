@@ -10,6 +10,13 @@ contract AdventureGoldGovernanceTest is Test {
     IERC20 adventureGold;
     uint256 mainnetFork;
     address testingAddress = 0x6cC5F688a315f3dC28A7781717a9A798a59fDA7b;
+    address testingAddress2 = 0xdd3767ABcAB26f261e2508A1DA1914053c7DDa78;
+
+    /// @notice Error emitted when transfers are not to or from the contract.
+    error OnlyTransfersToFromContract();
+
+    /// @notice Error emitted when the transfer function is called
+    error NonTransferable();
 
     function setUp() public {
         mainnetFork = vm.createFork(vm.envString("ETHEREUM_MAINNET_RPC_URL"));
@@ -51,6 +58,42 @@ contract AdventureGoldGovernanceTest is Test {
         assertEq(adventureGold.balanceOf(testingAddress), startingBalance);
         assertEq(adventureGoldGovernance.balanceOf(testingAddress), 0);
         assertEq(adventureGoldGovernance.totalSupply(), 0);
+
+        vm.stopPrank();
+    }
+
+    function test_CannotTransferExceptToOrFromContract() public {
+        // 100 tokens (which uses 18 decimals)
+        uint256 amount = 100 * 10 ** 18;
+
+        // Deposit 100 AGLD tokens
+        vm.startPrank(testingAddress);
+        adventureGold.approve(address(adventureGoldGovernance), amount);
+        adventureGoldGovernance.deposit(amount);
+
+        // Give approvals for transferFrom
+        adventureGoldGovernance.approve(testingAddress2, amount);
+        adventureGoldGovernance.approve(address(adventureGoldGovernance), amount);
+
+        // Try to transfer 100 Adventure Gold Governance tokens to another
+        // address
+        vm.startPrank(testingAddress);
+        vm.expectRevert(NonTransferable.selector);
+        adventureGoldGovernance.transfer(testingAddress2, amount);
+
+        vm.expectRevert(NonTransferable.selector);
+        adventureGoldGovernance.transferFrom(testingAddress, testingAddress2, amount);
+
+        // Try to transfer 100 Adventure Gold Governance tokens to the contract
+        vm.expectRevert(NonTransferable.selector);
+        adventureGoldGovernance.transfer(address(adventureGoldGovernance), amount);
+
+        vm.expectRevert(NonTransferable.selector);
+        adventureGoldGovernance.transferFrom(testingAddress, address(adventureGoldGovernance), amount);
+
+        // Try to transfer 100 Adventure Gold Governance tokens to the burn address
+        vm.expectRevert(NonTransferable.selector);
+        adventureGoldGovernance.transfer(address(adventureGoldGovernance), amount);
 
         vm.stopPrank();
     }
