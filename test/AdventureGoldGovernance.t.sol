@@ -98,6 +98,36 @@ contract AdventureGoldGovernanceTest is Test {
         vm.stopPrank();
     }
 
+    function test_CannotDepositMoreThanBalance() public {
+        // Starting balance of AGLD
+        uint256 startingBalance = adventureGold.balanceOf(testingAddress2);
+
+        // 100 tokens (which uses 18 decimals)
+        uint256 amount = 100 * 10 ** 18;
+        uint256 amountMoreThanBalance = 100_000_000 * 10 ** 18;
+
+        // Deposit 100 AGLD tokens
+        vm.startPrank(testingAddress2);
+        adventureGold.approve(address(adventureGoldGovernance), amount);
+        adventureGoldGovernance.deposit(amount);
+
+        // Check balances after deposit
+        assertEq(adventureGold.balanceOf(testingAddress2), startingBalance - amount);
+        assertEq(adventureGoldGovernance.balanceOf(testingAddress2), amount);
+        assertEq(adventureGoldGovernance.totalSupply(), amount);
+
+        // Try to deposit an amount greater than the balance
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        adventureGoldGovernance.deposit(amountMoreThanBalance);
+
+        // Check balances after failed deposit
+        assertEq(adventureGold.balanceOf(testingAddress2), startingBalance - amount);
+        assertEq(adventureGoldGovernance.balanceOf(testingAddress2), amount);
+        assertEq(adventureGoldGovernance.totalSupply(), amount);
+
+        vm.stopPrank();
+    }
+
     // This is a given in the AGLD contract, so it's not strictly necessary to
     // test
     function test_CannotDepositWithoutApprovals() public {
