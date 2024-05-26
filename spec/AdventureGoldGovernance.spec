@@ -9,15 +9,16 @@
     function allowance(address,address) external returns uint256 envfree;
 }
 
-// Filter transfers because we have already confirmed that they are vacuous
-// Negate this filter to only surface transfers
-definition filterTransfers(method f) returns bool = !(f.contract == currentContract &&
+// Only surface Adventure Gold Governance transfers (useful to prove that they
+// are vacuous)
+// Negate this to filter for everything besides Adventure Gold Governance transfers
+definition adventureGoldGovernanceTransfers(method f) returns bool = (f.contract == currentContract &&
 (f.selector ==
-sig:transfer(address,uint256).selector && f.selector ==
+sig:transfer(address,uint256).selector || f.selector ==
 sig:transferFrom(address,address,uint256).selector));
 
 /** @title Prove that transfers are vacuous because they always revert */
-rule transfersAlwaysRevert(method f) filtered { f -> !filterTransfers(f) } {
+rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
     f@withrevert(e, args);
@@ -32,7 +33,7 @@ rule transfersAlwaysRevert(method f) filtered { f -> !filterTransfers(f) } {
  * Since f is a parametric method that can be any function in the contract, we use
  * `f.selector` to specify the functions that may change the balance.
  */
-rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> filterTransfers(f) } {
+rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
     uint256 userBalanceBefore = balanceOf(user);
@@ -51,7 +52,7 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
 /** @title Users can never withdraw more than they've deposited 
 */
 rule userCanNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
-uint256 withdrawAmount) filtered { f -> filterTransfers(f) } {
+uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
     uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(e, user);
