@@ -55,6 +55,7 @@ rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTran
 rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
+
     uint256 userBalanceBefore = balanceOf(user);
     f(e, args);
     uint256 userBalanceAfter = balanceOf(user);
@@ -68,17 +69,15 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
         "user's balance changed as a result function other than deposit() or withdraw()";
 }
 
-rule balanceAlwaysChangesByDepositAmount(method f, address user, uint256 depositAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
-    uint256 userBalanceBefore = balanceOf(user);
-
+rule balanceAlwaysChangesByDepositAmount(method f, uint256 depositAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
 
+    uint256 userBalanceBefore = balanceOf(e.msg.sender);
     deposit(e, depositAmount);
-    bool depositReverted = lastReverted;
-    uint256 userBalanceAfter = balanceOf(user);
+    uint256 userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert((userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter), "balance change greater than deposit amount");
+    assert((userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter), "balance change different from deposit amount");
 }
 
 /** @title Users can never withdraw more than they've deposited 
@@ -102,3 +101,5 @@ uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && 
     // deposited. Otherwise, the withdrawal should proceed.
     assert(lastReverted || withdrawAmount <= depositAmount, "user withdrew more than deposited");
 }
+
+// Only msg.sender can withdraw
