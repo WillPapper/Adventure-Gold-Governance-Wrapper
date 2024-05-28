@@ -35,7 +35,7 @@ rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTran
     calldataarg args;
     f@withrevert(e, args);
 
-    assert (lastReverted, "transfer did not revert");
+    assert(lastReverted, "transfer did not revert");
 }
 
 /** @title Users' balance can only be changed as a result of `deposit()` or
