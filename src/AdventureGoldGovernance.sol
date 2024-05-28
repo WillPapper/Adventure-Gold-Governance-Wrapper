@@ -21,6 +21,9 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     /// @notice Error emitted when the transfer function is called
     error NonTransferable();
 
+    /// @notice Error emitted when a deposit or withdrawal of 0 is called
+    error AmountMustBeGreaterThanZero();
+
     /// @notice Emitted when a user deposits AGLD tokens, minting Adventure Gold
     /// Governance tokens.
     /// @param user The address of the user who deposited tokens.
@@ -50,6 +53,9 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
         // Follows the Checks-Effects-Interactions pattern
         // Checks
         // Allowance and transfer checks occur in the AGLD token contract
+        if (amount == 0) {
+            revert AmountMustBeGreaterThanZero;
+        }
 
         // Effects
         // Mint the same amount of Adventure Gold Governance tokens
@@ -71,6 +77,9 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
         // Checks
         // No allowance checks are needed since the msg.sender's tokens are
         // burned
+        if (amount == 0) {
+            revert AmountMustBeGreaterThanZero;
+        }
 
         // Effects
         // Burn the same amount of Adventure Gold Governance tokens from the
