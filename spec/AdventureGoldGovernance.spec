@@ -78,6 +78,8 @@ rule balanceAlwaysIncrementsByDepositAmount(uint256 depositAmount) {
     calldataarg args;
 
     mathint userBalanceBefore = balanceOf(e.msg.sender);
+    // This shouldn't be necessary, this is only for testing purposes:
+    require (userBalanceBefore + to_mathint(depositAmount) > 0 && userBalanceBefore + to_mathint(depositAmount) < 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
     deposit(e, depositAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
 
@@ -91,8 +93,6 @@ rule balanceAlwaysDecementsByWithdrawAmount(uint256 withdrawAmount) {
     calldataarg args;
 
     mathint userBalanceBefore = balanceOf(e.msg.sender);
-    // We immediately get the value of lastReverted because lastReverted updates
-    // after every function call, not just @withrevert function calls
     withdraw(e, withdrawAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
 
