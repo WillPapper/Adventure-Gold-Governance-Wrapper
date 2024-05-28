@@ -68,6 +68,19 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
         "user's balance changed as a result function other than deposit() or withdraw()";
 }
 
+rule balanceAlwaysChangesByDepositAmount(method f, address user, uint256 depositAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
+    uint256 userBalanceBefore = balanceOf(user);
+
+    env e;
+    calldataarg args;
+
+    deposit(e, depositAmount);
+    bool depositReverted = lastReverted;
+    uint256 userBalanceAfter = balanceOf(user);
+
+    assert((userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter), "balance change greater than deposit amount");
+}
+
 /** @title Users can never withdraw more than they've deposited 
 /* @dev We filter deposits and withdrawals here so that additional deposits and
  * withdrawals don't change the state
