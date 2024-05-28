@@ -81,7 +81,7 @@ rule balanceAlwaysIncrementsByDepositAmount(uint256 depositAmount) {
     deposit(e, depositAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert((userBalanceBefore + to_mathint(depositAmount)) == userBalanceAfter, "balance change different from deposit amount");
+    assert(userBalanceBefore + to_mathint(depositAmount) == userBalanceAfter, "balance change different from deposit amount");
 }
 
 
@@ -96,7 +96,7 @@ rule balanceAlwaysDecementsByWithdrawAmount(uint256 withdrawAmount) {
     withdraw(e, withdrawAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert((userBalanceBefore - to_mathint(withdrawAmount)) == userBalanceAfter, "balance change different from deposit amount");
+    assert(userBalanceBefore - to_mathint(withdrawAmount) == userBalanceAfter, "balance change different from deposit amount");
 }
 
 /** @title Users can never withdraw more than they've deposited 
@@ -124,7 +124,7 @@ uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && 
 
     // Withdraw should revert if the user tries to withdraw more than they've
     // deposited. Otherwise, the withdrawal should proceed.
-    assert(to_mathint(withdrawAmount) <= (to_mathint(depositAmount) + adventureGoldGovernanceBalanceBefore), "user withdrew more than deposited");
+    assert(to_mathint(withdrawAmount) <= to_mathint(depositAmount) + adventureGoldGovernanceBalanceBefore, "user withdrew more than deposited");
 }
 
 // Only msg.sender can withdraw
