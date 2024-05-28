@@ -91,6 +91,7 @@ uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && 
     calldataarg args;
 
     uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(e.msg.sender);
+    uint256 adventureGoldGovernanceBalanceBefore = balanceOf(e.msg.sender);
     // This is separately verified in userCanNeverDepositMoreThanBalance
     require adventureGoldBalanceBefore >= depositAmount;
 
@@ -100,7 +101,7 @@ uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && 
 
     // Withdraw should revert if the user tries to withdraw more than they've
     // deposited. Otherwise, the withdrawal should proceed.
-    assert(lastReverted || withdrawAmount <= depositAmount, "user withdrew more than deposited");
+    assert(lastReverted || to_mathint(withdrawAmount) <= (depositAmount + adventureGoldGovernanceBalanceBefore), "user withdrew more than deposited");
 }
 
 // Only msg.sender can withdraw
