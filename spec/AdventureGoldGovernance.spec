@@ -74,22 +74,23 @@ rule balanceAlwaysChangesByDepositAmount(method f, uint256 depositAmount) filter
     calldataarg args;
 
     uint256 userBalanceBefore = balanceOf(e.msg.sender);
-    deposit(e, depositAmount);
+    deposit@withrevert(e, depositAmount);
+    bool depositRevert = lastReverted;
     uint256 userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert((userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter), "balance change different from deposit amount");
+    assert(depositRevert || (userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter), "balance change different from deposit amount");
 }
 
 /** @title Users can never withdraw more than they've deposited 
 /* @dev We filter deposits and withdrawals here so that additional deposits and
  * withdrawals don't change the state
 */
-rule userCanNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
+rule userCanNeverWithdrawMoreThanDeposited(method f, uint256 depositAmount,
 uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && !adventureGoldGovernanceDepositsAndWithdrawals(f) } {
-    uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(user);
-
     env e;
     calldataarg args;
+
+    uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(e.msg.sender);
     // This is separately verified in userCanNeverDepositMoreThanBalance
     require adventureGoldBalanceBefore >= depositAmount;
 
