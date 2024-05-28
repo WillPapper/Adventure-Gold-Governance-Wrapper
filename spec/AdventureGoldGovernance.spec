@@ -79,7 +79,7 @@ rule balanceAlwaysIncrementsByDepositAmount(uint256 depositAmount) {
 
     mathint userBalanceBefore = balanceOf(e.msg.sender);
     // This shouldn't be necessary, this is only for testing purposes:
-    require (userBalanceBefore + to_mathint(depositAmount) > 0 && userBalanceBefore + to_mathint(depositAmount) < 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    require (userBalanceBefore + to_mathint(depositAmount) < 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
     deposit(e, depositAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
 
