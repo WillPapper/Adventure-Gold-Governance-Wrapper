@@ -12,6 +12,13 @@
     function DummyERC20Impl.totalSupply() external returns uint256 envfree;
     function DummyERC20Impl.balanceOf(address) external returns uint256 envfree;
     function DummyERC20Impl.allowance(address,address) external returns uint256 envfree;
+
+    // Dispatch for calls made through Address.sol. This ensures that low-level
+    // calls will succeed
+    function _._ external => DISPATCH [
+        _.transferFrom(address, address, uint256),
+        _.transfer(address, uint256)
+    ] default NONDET;
 }
 
 // Only surface Adventure Gold Governance transfers (useful to prove that they
