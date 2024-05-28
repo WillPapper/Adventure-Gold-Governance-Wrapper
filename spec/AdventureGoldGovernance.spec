@@ -29,6 +29,13 @@ definition adventureGoldGovernanceTransfers(method f) returns bool = (f.contract
 sig:transfer(address,uint256).selector || f.selector ==
 sig:transferFrom(address,address,uint256).selector));
 
+// Filter deposits and withdrawals (useful when testing arbitrary state changes
+// besides deposits and withdrawals)
+definition adventureGoldGovernanceDepositsAndWithdrawals(method f) returns bool = (f.contract == currentContract &&
+(f.selector ==
+sig:deposit(uint256).selector || f.selector ==
+sig:withdraw(uint256).selector));
+
 /** @title Prove that transfers are vacuous because they always revert */
 rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTransfers(f) } {
     env e;
@@ -62,9 +69,11 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
 }
 
 /** @title Users can never withdraw more than they've deposited 
+/* @dev We filter deposits and withdrawals here so that additional deposits and
+ * withdrawals don't change the state
 */
 rule userCanNeverWithdrawMoreThanDeposited(method f, address user, uint256 depositAmount,
-uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
+uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && !adventureGoldGovernanceDepositsAndWithdrawals(f) } {
     uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(user);
 
     env e;
