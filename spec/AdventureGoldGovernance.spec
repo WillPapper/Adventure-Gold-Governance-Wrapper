@@ -73,34 +73,30 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
 }
 
 // Then, we confirm that deposits alway increment the balance properly
-rule balanceAlwaysChangesByDepositAmount(uint256 depositAmount) {
+rule balanceAlwaysIncrementsByDepositAmount(uint256 depositAmount) {
     env e;
     calldataarg args;
 
-    uint256 userBalanceBefore = balanceOf(e.msg.sender);
-    deposit@withrevert(e, depositAmount);
-    // We immediately get the value of lastReverted because lastReverted updates
-    // after every function call, not just @withrevert function calls
-    bool depositRevert = lastReverted;
-    uint256 userBalanceAfter = balanceOf(e.msg.sender);
+    mathint userBalanceBefore = balanceOf(e.msg.sender);
+    deposit(e, depositAmount);
+    mathint userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert(depositRevert || ((userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter)), "balance change different from deposit amount");
+    assert((userBalanceBefore + to_mathint(depositAmount)) == userBalanceAfter, "balance change different from deposit amount");
 }
 
 
 // Then, we confirm that withdrawals always decrement the balance properly
-rule balanceAlwaysChangesByWithdrawAmount(uint256 withdrawAmount) {
+rule balanceAlwaysDecementsByWithdrawAmount(uint256 withdrawAmount) {
     env e;
     calldataarg args;
 
-    uint256 userBalanceBefore = balanceOf(e.msg.sender);
+    mathint userBalanceBefore = balanceOf(e.msg.sender);
     // We immediately get the value of lastReverted because lastReverted updates
     // after every function call, not just @withrevert function calls
-    withdraw@withrevert(e, withdrawAmount);
-    bool withdrawRevert = lastReverted;
-    uint256 userBalanceAfter = balanceOf(e.msg.sender);
+    withdraw(e, withdrawAmount);
+    mathint userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert(withdrawRevert || ((userBalanceBefore - withdrawAmount) == to_mathint(userBalanceAfter)), "balance change different from deposit amount");
+    assert((userBalanceBefore - to_mathint(withdrawAmount)) == userBalanceAfter, "balance change different from deposit amount");
 }
 
 /** @title Users can never withdraw more than they've deposited 
@@ -117,18 +113,18 @@ uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && 
     env e;
     calldataarg args;
 
-    uint256 adventureGoldBalanceBefore = adventureGold.balanceOf(e.msg.sender);
-    uint256 adventureGoldGovernanceBalanceBefore = balanceOf(e.msg.sender);
+    mathint adventureGoldBalanceBefore = adventureGold.balanceOf(e.msg.sender);
+    mathint adventureGoldGovernanceBalanceBefore = balanceOf(e.msg.sender);
     // This is separately verified in userCanNeverDepositMoreThanBalance
-    require adventureGoldBalanceBefore >= depositAmount;
+    require adventureGoldBalanceBefore >= to_mathint(depositAmount);
 
     deposit(e, depositAmount);
     f(e, args);
-    withdraw@withrevert(e, withdrawAmount);
+    withdraw(e, withdrawAmount);
 
     // Withdraw should revert if the user tries to withdraw more than they've
     // deposited. Otherwise, the withdrawal should proceed.
-    assert(lastReverted || to_mathint(withdrawAmount) <= (depositAmount + adventureGoldGovernanceBalanceBefore), "user withdrew more than deposited");
+    assert(to_mathint(withdrawAmount) <= (to_mathint(depositAmount) + adventureGoldGovernanceBalanceBefore), "user withdrew more than deposited");
 }
 
 // Only msg.sender can withdraw
