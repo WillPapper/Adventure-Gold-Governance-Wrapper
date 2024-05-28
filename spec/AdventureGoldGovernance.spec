@@ -37,6 +37,7 @@ sig:deposit(uint256).selector || f.selector ==
 sig:withdraw(uint256).selector));
 
 /** @title Prove that transfers are vacuous because they always revert */
+// This is groundwork so that we can filter transfers in later rules
 rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
@@ -52,6 +53,8 @@ rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTran
  * Since f is a parametric method that can be any function in the contract, we use
  * `f.selector` to specify the functions that may change the balance.
  */
+// First, we confirm that only the deposit and withdraw functions will change
+// user balances
 rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
@@ -69,22 +72,46 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
         "user's balance changed as a result function other than deposit() or withdraw()";
 }
 
-rule balanceAlwaysChangesByDepositAmount(method f, uint256 depositAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
+// Then, we confirm that deposits alway increment the balance properly
+rule balanceAlwaysChangesByDepositAmount(uint256 depositAmount) {
     env e;
     calldataarg args;
 
     uint256 userBalanceBefore = balanceOf(e.msg.sender);
     deposit@withrevert(e, depositAmount);
+    // We immediately get the value of lastReverted because lastReverted updates
+    // after every function call, not just @withrevert function calls
     bool depositRevert = lastReverted;
     uint256 userBalanceAfter = balanceOf(e.msg.sender);
 
-    assert(depositRevert || (userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter), "balance change different from deposit amount");
+    assert(depositRevert || ((userBalanceBefore + depositAmount) == to_mathint(userBalanceAfter)), "balance change different from deposit amount");
+}
+
+
+// Then, we confirm that withdrawals always decrement the balance properly
+rule balanceAlwaysChangesByWithdrawAmount(uint256 withdrawAmount) {
+    env e;
+    calldataarg args;
+
+    uint256 userBalanceBefore = balanceOf(e.msg.sender);
+    // We immediately get the value of lastReverted because lastReverted updates
+    // after every function call, not just @withrevert function calls
+    withdraw@withrevert(e, withdrawAmount);
+    bool withdrawRevert = lastReverted;
+    uint256 userBalanceAfter = balanceOf(e.msg.sender);
+
+    assert(withdrawRevert || ((userBalanceBefore - withdrawAmount) == to_mathint(userBalanceAfter)), "balance change different from deposit amount");
 }
 
 /** @title Users can never withdraw more than they've deposited 
 /* @dev We filter deposits and withdrawals here so that additional deposits and
  * withdrawals don't change the state
 */
+// Then, we confirm that users can never withdraw more than they've deposited.
+// This is very important for obvious reasons
+// We filter additional deposit and withdrawal calls here because they do change
+// the balance arbitrarily. We rely on the prior rules to know that
+// incrementing/decrementing is happening properly
 rule userCanNeverWithdrawMoreThanDeposited(method f, uint256 depositAmount,
 uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && !adventureGoldGovernanceDepositsAndWithdrawals(f) } {
     env e;
