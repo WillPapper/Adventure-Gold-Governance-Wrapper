@@ -54,7 +54,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
         // Checks
         // Allowance and transfer checks occur in the AGLD token contract
         if (amount == 0) {
-            revert AmountMustBeGreaterThanZero;
+            revert AmountMustBeGreaterThanZero();
         }
 
         // Effects
@@ -78,7 +78,7 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
         // No allowance checks are needed since the msg.sender's tokens are
         // burned
         if (amount == 0) {
-            revert AmountMustBeGreaterThanZero;
+            revert AmountMustBeGreaterThanZero();
         }
 
         // Effects
