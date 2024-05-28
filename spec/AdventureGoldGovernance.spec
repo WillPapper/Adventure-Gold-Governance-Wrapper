@@ -1,6 +1,6 @@
  import "./helpers/erc20.spec";
 
- using DummyERC20Impl as adventureGold;
+ using ERC20Basic as adventureGold;
 
  methods {
     // envfree functions 
@@ -9,9 +9,9 @@
     function allowance(address,address) external returns uint256 envfree;
 
     // DummyERC20Impl envfree functions
-    function DummyERC20Impl.totalSupply() external returns uint256 envfree;
-    function DummyERC20Impl.balanceOf(address) external returns uint256 envfree;
-    function DummyERC20Impl.allowance(address,address) external returns uint256 envfree;
+    function ERC20Basic.totalSupply() external returns uint256 envfree;
+    function ERC20Basic.balanceOf(address) external returns uint256 envfree;
+    function ERC20Basic.allowance(address,address) external returns uint256 envfree;
 
     // Dispatch for calls made through Address.sol. This ensures that low-level
     // calls will succeed
