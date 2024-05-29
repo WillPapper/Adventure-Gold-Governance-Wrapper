@@ -60,9 +60,32 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
     calldataarg args;
 
     uint256 userBalanceBefore = balanceOf(user);
-    f(e, args);
+    f@withrevert(e, args);
+    bool functionReverted = lastReverted;
     uint256 userBalanceAfter = balanceOf(user);
 
+    // Confirm that the balance change is consistent with the function called
+    if (userBalanceAfter > userBalanceBefore) {
+        assert(
+            f.selector == sig:deposit(uint256).selector,
+            "user's balance increased as a result of a function other than deposit()"
+        );
+    }
+    else if (userBalanceAfter < userBalanceBefore) {
+        assert(
+            f.selector == sig:withdraw(uint256).selector,
+            "user's balance decreased as a result of a function other than withdraw()"
+        );
+    }
+    else if (userBalanceAfter == userBalanceBefore) {
+        assert(
+            f.selector != sig:deposit(uint256).selector &&
+            f.selector != sig:withdraw(uint256).selector,
+            "user's balance remained the same even when running deposit() or withdraw()"
+        );
+    }
+
+    // Check that only deposit() and withdraw() change the user's balance
     assert (
         userBalanceBefore != userBalanceAfter => 
         (
@@ -118,11 +141,7 @@ rule balanceAlwaysOverflowsAsExpected(uint256 depositAmount) {
    else {
     assert(totalSupplyAfter <= uint208Max, "total supply exceeded ERC20Votes Safe Supply");
    }
-
-
-
 }
-
 
 // Then, we confirm that withdrawals always decrement the balance properly
 rule balanceAlwaysDecementsByWithdrawAmount(uint256 withdrawAmount) {
@@ -163,5 +182,3 @@ uint256 withdrawAmount) filtered { f -> !adventureGoldGovernanceTransfers(f) && 
     // deposited. Otherwise, the withdrawal should proceed.
     assert(to_mathint(withdrawAmount) <= to_mathint(depositAmount) + adventureGoldGovernanceBalanceBefore, "user withdrew more than deposited");
 }
-
-// Only msg.sender can withdraw
