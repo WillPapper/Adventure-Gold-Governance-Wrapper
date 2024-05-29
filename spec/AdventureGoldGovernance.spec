@@ -74,17 +74,51 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
 
 // Then, we confirm that deposits alway increment the balance properly
 rule balanceAlwaysIncrementsByDepositAmount(uint256 depositAmount) {
+    mathint uint256Max = 0x10000000000000000000000000000000000000000000000000000000000000000;
+    mathint uint208Max = 0x10000000000000000000000000000000000000000000000000000;
+    mathint uint256MaxMinusOne = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    mathint uint208MaxMinusOne = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+
     env e;
     calldataarg args;
 
     mathint userBalanceBefore = balanceOf(e.msg.sender);
-    // ERC20Votes sets a max total supply of type(uint208).max to prevent votes
-    // from overflowing. 
-    require (userBalanceBefore + to_mathint(depositAmount) < 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    // We don't want deposit amounts to trigger integer overflows. Note that
+    // reverts after exceeding the safe supply are handled separately in the
+    // next rule
+    require (userBalanceBefore + to_mathint(depositAmount) <= uint256MaxMinusOne);
     deposit(e, depositAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
 
     assert(userBalanceBefore + to_mathint(depositAmount) == userBalanceAfter, "balance change different from deposit amount");
+}
+
+// Then, we confirm that balance overflows happen as expected within the ERC20Votes Safe Supply
+rule balanceAlwaysOverflowsAsExpected(uint256 depositAmount) {
+    mathint uint256Max = 0x10000000000000000000000000000000000000000000000000000000000000000;
+    mathint uint208Max = 0x10000000000000000000000000000000000000000000000000000;
+    mathint uint256MaxMinusOne = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    mathint uint208MaxMinusOne = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+
+    env e;
+    calldataarg args;
+
+    mathint totalSupplyBefore = totalSupply();
+    // ERC20Votes sets a max total supply of type(uint208).max to prevent votes
+    // from overflowing. 
+    deposit@withrevert(e, depositAmount);
+    bool depositReverted = lastReverted;
+
+    mathint totalSupplyAfter = totalSupply();
+
+    // Check the deposit revert state
+   if (to_mathint(depositAmount) > uint208Max) {
+    assert(depositReverted, "deposit did not revert upon exceeding ERC20Votes Safe Supply");
+   }
+
+   assert(depositReverted || totalSupplyAfter <= uint208Max, "total supply exceeded ERC20Votes Safe Supply");
+
+
 }
 
 
