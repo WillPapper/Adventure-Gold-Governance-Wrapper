@@ -65,13 +65,13 @@ rule balanceChangesFromCertainFunctions(method f) filtered { f -> !adventureGold
     uint256 userBalanceAfter = balanceOf(e.msg.sender);
 
     // Confirm that the balance change is consistent with the function called
-    if (userBalanceAfter > userBalanceBefore) {
+    if (!functionReverted && userBalanceAfter > userBalanceBefore) {
         assert(
             f.selector == sig:deposit(uint256).selector,
             "user's balance increased as a result of a function other than deposit()"
         );
     }
-    else if (userBalanceAfter < userBalanceBefore) {
+    else if (!functionReverted && userBalanceAfter < userBalanceBefore) {
         assert(
             f.selector == sig:withdraw(uint256).selector,
             "user's balance decreased as a result of a function other than withdraw()"
