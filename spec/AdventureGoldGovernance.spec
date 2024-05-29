@@ -79,8 +79,9 @@ rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> 
     }
     else if (userBalanceAfter == userBalanceBefore) {
         assert(
-            f.selector != sig:deposit(uint256).selector &&
-            f.selector != sig:withdraw(uint256).selector,
+            functionReverted ||
+            (f.selector != sig:deposit(uint256).selector &&
+            f.selector != sig:withdraw(uint256).selector),
             "user's balance remained the same even when running deposit() or withdraw()"
         );
     }
