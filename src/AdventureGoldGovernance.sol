@@ -23,9 +23,6 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     /// @notice Error emitted when a deposit or withdrawal of 0 is called
     error AmountMustBeGreaterThanZero();
 
-    /// @notice Error emitted when a user attempts to withdraw more than their amount
-    error AmountMustBeGreaterThanBalance();
-
     /// @notice Emitted when a user deposits AGLD tokens, minting Adventure Gold
     /// Governance tokens.
     /// @param user The address of the user who deposited tokens.
@@ -77,13 +74,12 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     function withdraw(uint256 amount) external {
         // Follows the Checks-Effects-Interactions pattern
         // Checks
+        // No balance checks are needed since withdrawing more than the balance
+        // triggers ERC20InsufficientBalance in the _burn() function
         // No allowance checks are needed since the msg.sender's tokens are
         // burned
         if (amount == 0) {
             revert AmountMustBeGreaterThanZero();
-        }
-        if (amount > balanceOf(msg.sender)) {
-            revert AmountMustBeGreaterThanBalance();
         }
 
         // Effects

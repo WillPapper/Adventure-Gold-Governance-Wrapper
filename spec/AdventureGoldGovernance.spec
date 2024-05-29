@@ -55,14 +55,14 @@ rule transfersAlwaysRevert(method f) filtered { f -> adventureGoldGovernanceTran
  */
 // First, we confirm that only the deposit and withdraw functions will change
 // user balances
-rule balanceChangesFromCertainFunctions(method f, address user) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
+rule balanceChangesFromCertainFunctions(method f) filtered { f -> !adventureGoldGovernanceTransfers(f) } {
     env e;
     calldataarg args;
 
-    uint256 userBalanceBefore = balanceOf(user);
+    uint256 userBalanceBefore = balanceOf(e.msg.sender);
     f@withrevert(e, args);
     bool functionReverted = lastReverted;
-    uint256 userBalanceAfter = balanceOf(user);
+    uint256 userBalanceAfter = balanceOf(e.msg.sender);
 
     // Confirm that the balance change is consistent with the function called
     if (userBalanceAfter > userBalanceBefore) {
