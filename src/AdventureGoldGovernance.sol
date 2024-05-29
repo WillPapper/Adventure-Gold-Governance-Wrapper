@@ -105,13 +105,6 @@ contract AdventureGoldGovernance is IERC6372, ERC20Permit, ERC20Votes {
     /// @dev For Solidity lineraization, see https://medium.com/@kalexotsu/inheritance-inheritance-order-and-the-super-keyword-in-solidity-bbe49a2478b6
     /// @dev ERC20Votes is called since Solidity inheritance is linearized from right to left
     function _update(address from, address to, uint256 value) internal override(ERC20, ERC20Votes) {
-        // Deny the transfer if:
-        // - The `from` address is not the zero address or this contract
-        // Or:
-        // - The `to` address is not the zero address or this contract
-        if (!((from == address(this) || from == address(0)) || (to == address(this) || to == address(0)))) {
-            revert OnlyMintsAndBurnsAllowed();
-        }
         super._update(from, to, value);
     }
 
