@@ -185,6 +185,7 @@ contract AdventureGoldGovernanceTest is Test {
         vm.expectRevert();
         simpleMintable.mint(1);
         assertEq(type(uint256).max, adventureGold.balanceOf(adventureGoldContractOwner));
+        assertEq(0, adventureGoldGovernance.totalSupply());
 
         // Deposit uint256 max AGLD tokens
         adventureGold.approve(address(adventureGoldGovernance), type(uint256).max);
@@ -197,8 +198,18 @@ contract AdventureGoldGovernanceTest is Test {
         );
         adventureGoldGovernance.deposit(type(uint256).max);
 
+        uint256 depositAmount = uint256(type(uint208).max);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ERC20ExceededSafeSupply.selector,
+                411376139330301510538742295639337626245683966408394965837152256,
+                411376139330301510538742295639337626245683966408394965837152255
+            )
+        );
+        adventureGoldGovernance.deposit(depositAmount + 1);
+
         // This should succeed when we only deposit the cap set by ERC20Votes
-        adventureGoldGovernance.deposit(type(uint208).max);
+        adventureGoldGovernance.deposit(depositAmount);
     }
 
     // This is a given in the AGLD contract, so it's not strictly necessary to
