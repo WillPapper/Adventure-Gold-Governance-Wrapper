@@ -112,11 +112,13 @@ rule balanceAlwaysOverflowsAsExpected(uint256 depositAmount) {
     mathint totalSupplyAfter = totalSupply();
 
     // Check the deposit revert state
-   if (to_mathint(depositAmount) > uint208Max) {
+   if (to_mathint(totalSupplyAfter) > uint208Max) {
     assert(depositReverted, "deposit did not revert upon exceeding ERC20Votes Safe Supply");
    }
+   else {
+    assert(totalSupplyAfter <= uint208Max, "total supply exceeded ERC20Votes Safe Supply");
+   }
 
-   assert(depositReverted || totalSupplyAfter <= uint208Max, "total supply exceeded ERC20Votes Safe Supply");
 
 
 }
