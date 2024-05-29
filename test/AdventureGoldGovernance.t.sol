@@ -171,7 +171,7 @@ contract AdventureGoldGovernanceTest is Test {
         vm.stopPrank();
     }
 
-    function testDepositOverflowBehavior() public {
+    function testDepositOverflowBehaviorERC20Votes() public {
         // Use vm.etch to replace Adventure Gold address with standard ERC-20 address
         SimpleMintable simpleMintable = new SimpleMintable();
         vm.etch(adventureGoldGovernance.AGLD_TOKEN_ADDRESS(), address(simpleMintable).code);
@@ -210,6 +210,13 @@ contract AdventureGoldGovernanceTest is Test {
 
         // This should succeed when we only deposit the cap set by ERC20Votes
         adventureGoldGovernance.deposit(depositAmount);
+    }
+
+    function testOverflowBehaviorERC20() public {
+        SimpleMintable simpleMintable = new SimpleMintable();
+        simpleMintable.mint(type(uint256).max);
+        // Uncomment this to trigger an overflow
+        // simpleMintable.mint(1);
     }
 
     // This is a given in the AGLD contract, so it's not strictly necessary to
