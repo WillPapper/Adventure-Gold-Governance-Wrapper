@@ -4,6 +4,7 @@ pragma solidity ^0.8.25;
 import {Test, console} from "forge-std/Test.sol";
 import {AdventureGoldGovernance} from "../src/AdventureGoldGovernance.sol";
 import "../lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {SimpleMintable} from "./SimpleMintable.sol";
 
 contract AdventureGoldGovernanceTest is Test {
     AdventureGoldGovernance adventureGoldGovernance;
@@ -17,6 +18,11 @@ contract AdventureGoldGovernanceTest is Test {
 
     /// @notice Error emitted when the transfer function is called
     error NonTransferable();
+
+    /**
+     * @dev Total supply cap has been exceeded, introducing a risk of votes overflowing.
+     */
+    error ERC20ExceededSafeSupply(uint256 increasedSupply, uint256 cap);
 
     /**
      * @dev Indicates an error related to the current `balance` of a `sender`. Used in transfers.
@@ -163,6 +169,36 @@ contract AdventureGoldGovernanceTest is Test {
         assertEq(adventureGoldGovernance.totalSupply(), amount);
 
         vm.stopPrank();
+    }
+
+    function testDepositOverflowBehavior() public {
+        // Use vm.etch to replace Adventure Gold address with standard ERC-20 address
+        SimpleMintable simpleMintable = new SimpleMintable();
+        vm.etch(adventureGoldGovernance.AGLD_TOKEN_ADDRESS(), address(simpleMintable).code);
+        simpleMintable = SimpleMintable(adventureGoldGovernance.AGLD_TOKEN_ADDRESS());
+
+        address adventureGoldContractOwner = 0xcD814C83198C15A542F9A13FAf84D518d1744ED1;
+        vm.startPrank(adventureGoldContractOwner);
+        uint256 balanceToSend =
+            (type(uint256).max - adventureGold.balanceOf(0xcD814C83198C15A542F9A13FAf84D518d1744ED1));
+        simpleMintable.mint(balanceToSend);
+        vm.expectRevert();
+        simpleMintable.mint(1);
+        assertEq(type(uint256).max, adventureGold.balanceOf(adventureGoldContractOwner));
+
+        // Deposit uint256 max AGLD tokens
+        adventureGold.approve(address(adventureGoldGovernance), type(uint256).max);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ERC20ExceededSafeSupply.selector,
+                115792089237316195423570985008687907853269984665640564039457584007913129639935,
+                411376139330301510538742295639337626245683966408394965837152255
+            )
+        );
+        adventureGoldGovernance.deposit(type(uint256).max);
+
+        // This should succeed when we only deposit the cap set by ERC20Votes
+        adventureGoldGovernance.deposit(type(uint208).max);
     }
 
     // This is a given in the AGLD contract, so it's not strictly necessary to

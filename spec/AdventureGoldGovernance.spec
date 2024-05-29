@@ -78,7 +78,7 @@ rule balanceAlwaysIncrementsByDepositAmount(uint256 depositAmount) {
     calldataarg args;
 
     mathint userBalanceBefore = balanceOf(e.msg.sender);
-    // This shouldn't be necessary, this is only for testing purposes:
+    // ERC20Votes sets a max total supply of type(uint208).max to prevent votes from overflowing. 
     require (userBalanceBefore + to_mathint(depositAmount) < 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
     deposit(e, depositAmount);
     mathint userBalanceAfter = balanceOf(e.msg.sender);
